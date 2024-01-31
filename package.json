@@ -2,20 +2,27 @@
   "name": "registry",
   "version": "0.1.0",
   "bin": {
-    "registry": "bin/registry.js"
+    "registry": "bin/index.ts"
   },
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc -w",
-    "test": "jest",
-    "cdk": "cdk"
+    "lint": "npx eslint .",
+    "build": "npx tsc",
+    "synth": "npx cdk synth",
+    "deploy": "npx cdk deploy --profile sunsreddit-net --all --ci true || exit 1",
+    "destroy": "npx cdk destroy --profile sunsreddit-net --all --force || exit 1",
+    "start": "JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=1 CDK_DEBUG=true npm run deploy",
+    "test": "npx jest --coverage",
+    "watch": "npx tsc -w"
   },
   "devDependencies": {
     "@types/jest": "^29.5.11",
     "@types/node": "20.11.6",
+    "@types/source-map-support": "^0.5.10",
+    "@typescript-eslint/eslint-plugin": "^6.20.0",
+    "@typescript-eslint/parser": "^6.20.0",
+    "aws-cdk": "2.124.0",
     "jest": "^29.7.0",
     "ts-jest": "^29.1.2",
-    "aws-cdk": "2.124.0",
     "ts-node": "^10.9.2",
     "typescript": "~5.3.3"
   },

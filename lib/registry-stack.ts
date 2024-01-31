@@ -1,16 +1,17 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as parameters from '../config/parameters.json';
 
 export class RegistryStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+    const { resources } = parameters;
+    
+    const org = resources.github.organization;
+    const repos = resources.github.repos;
+    repos.forEach((repo) => {
+      console.log(`${org}/${repo.name}`);
+    });
 
-    // The code that defines your stack goes here
-
-    // example resource
-    // const queue = new sqs.Queue(this, 'RegistryQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
   }
 }

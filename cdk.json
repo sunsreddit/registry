@@ -1,5 +1,6 @@
 {
-  "app": "npx ts-node --prefer-ts-exts bin/registry.ts",
+  "app": "npx ts-node --prefer-ts-exts bin/index.ts",
+  "requireApproval": "never",
   "watch": {
     "include": [
       "**"
