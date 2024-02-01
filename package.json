@@ -1,16 +1,16 @@
 {
   "name": "registry",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "bin": {
     "registry": "bin/index.ts"
   },
   "scripts": {
     "lint": "npx eslint .",
     "build": "npx tsc",
-    "synth": "npx cdk synth",
-    "deploy": "npx cdk deploy --profile sunsreddit-net --all --ci true || exit 1",
-    "destroy": "npx cdk destroy --profile sunsreddit-net --all --force || exit 1",
-    "start": "JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=1 CDK_DEBUG=true npm run deploy",
+    "synth": "JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=1 npx cdk synth",
+    "deploy": "JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=1 npx cdk deploy --profile sunsreddit-net --all --ci true || exit 1",
+    "destroy": "JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=1 npx cdk destroy --profile sunsreddit-net --all --force || exit 1",
+    "start": "npm run deploy",
     "test": "npx jest --coverage",
     "watch": "npx tsc -w"
   },
