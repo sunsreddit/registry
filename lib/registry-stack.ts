@@ -1,4 +1,4 @@
-import { Duration, Stack, StackProps } from 'aws-cdk-lib';
+import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as parameters from '../config/parameters.json';
 import { Repository } from 'aws-cdk-lib/aws-ecr';
@@ -18,7 +18,17 @@ export class RegistryStack extends Stack {
     const repos = resources.github.repos;
     
     const iamPath = `/${org}/ecr/`;
-    const actions = ['ecr:InitiateLayerUpload', 'ecr:UploadLayerPart', 'ecr:CompleteLayerUpload', 'ecr:PutImage'];
+    // https://github.com/aws-actions/amazon-ecr-login/blob/acc668a55b444f06f742db50de9ba3014ddf8d0b/README.md
+    const actions = [
+      'ecr:BatchCheckLayerAvailability',
+      'ecr:BatchGetImage',
+      'ecr:CompleteLayerUpload',
+      'ecr:GetAuthorizationToken', 
+      'ecr:GetDownloadUrlForLayer',
+      'ecr:InitiateLayerUpload',
+      'ecr:PutImage',
+      'ecr:UploadLayerPart'
+    ];
     const statements: PolicyStatement[] = [];
     const users: User[] = [];
 
