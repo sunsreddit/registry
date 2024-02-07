@@ -2,86 +2,48 @@ import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as parameters from '../config/parameters.json';
 import { Repository } from 'aws-cdk-lib/aws-ecr';
-import { CompositePrincipal, Effect, Group, ManagedPolicy, PolicyStatement, Role, User } from 'aws-cdk-lib/aws-iam';
-
-interface RepoConfig {
-  name: string;
-  userCondition: object;
-  resources: string[];
-}
+import {
+  OpenIdConnectProvider,
+  Role,
+  WebIdentityPrincipal,
+} from 'aws-cdk-lib/aws-iam';
 
 export class RegistryStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
-    const { resources } = parameters;
-    const org = resources.github.organization;
-    const repos = resources.github.repos;
-    
-    const iamPath = `/${org}/ecr/`;
-    // https://github.com/aws-actions/amazon-ecr-login/blob/acc668a55b444f06f742db50de9ba3014ddf8d0b/README.md
-    const actions = [
-      'ecr:BatchCheckLayerAvailability',
-      'ecr:BatchGetImage',
-      'ecr:CompleteLayerUpload',
-      'ecr:GetAuthorizationToken', 
-      'ecr:GetDownloadUrlForLayer',
-      'ecr:InitiateLayerUpload',
-      'ecr:PutImage',
-      'ecr:UploadLayerPart'
-    ];
-    const statements: PolicyStatement[] = [];
-    const users: User[] = [];
+    const {
+      aws: { clientIds },
+      github: { issuer, organization, repos },
+    } = parameters;
 
-    const ecrPushGroup = new Group(this, 'EcrPushGroup', {
-      path: iamPath,
-      groupName: `ecr-github.${org}`
-    });
-
-    const repoConfigs: RepoConfig[] = repos.map((repo: {name: string; }) => ({
-      name: repo.name,
-      userCondition: { 
-        StringEquals: { 
-          'aws:username': `ecr-github.${repo.name}` 
-        }
-      },
-      resources: [`arn:aws:ecr:${this.region}:${this.account}:repository/${org}/${repo.name}`]
-    }));
-    
-    repoConfigs.forEach(repoConfig => {
-      const { name, userCondition, resources } = repoConfig;
-
-      const repoUser = `ecr-github.${name}`;
-      const user = new User(this, `${repoUser}User`, {
-        groups: [ecrPushGroup],
-        path: iamPath,
-        userName: repoUser,
-      });
-      users.push(user);
-            
-      new Repository(this, `${name}Repo`, {
+    repos.forEach((repo) => {
+      new Repository(this, `${repo}Repo`, {
         imageScanOnPush: true,
-        repositoryName: `${org}/${name}`,
+        repositoryName: `${organization}/${repo}`,
       });
-
-      const statement = new PolicyStatement({
-        actions,
-        conditions: userCondition,
-        effect: Effect.ALLOW,
-        resources,
-      });
-      
-      statements.push(statement);
     });
 
-    const ecrPolicy = new ManagedPolicy(this, 'EcrPolicy', {
-      groups: [ecrPushGroup],
-      path: iamPath,
-      statements,
-    });
+    const oidcProviderGitHubActions = new OpenIdConnectProvider(
+      this,
+      'OIDCProviderGitHubActions',
+      {
+        url: `https://${issuer}`,
+        clientIds,
+      }
+    );
 
-    new Role(this, 'EcrRole', {
-      assumedBy: new CompositePrincipal(...users),
-      managedPolicies: [ecrPolicy],
-    }).grantAssumeRole(ecrPushGroup);
+    const subCondition = repos
+      .map((repo) => `repo:${organization}/${repo}:ref:refs/heads/*`)
+      .join('||');
+
+    new Role(this, 'GitHubActionsRole', {
+      assumedBy: new WebIdentityPrincipal(
+        oidcProviderGitHubActions.openIdConnectProviderArn,
+        {
+          StringLike: { [`${issuer}:sub`]: subCondition },
+          StringEquals: { [`${issuer}:aud`]: 'sts.amazonaws.com' },
+        }
+      ),
+    });
   }
 }
