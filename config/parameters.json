@@ -1,0 +1,13 @@
+{
+  "stackName": "sunsreddit-registry",
+  "description": "Phoenix Suns Subreddit: AWS Elastic Container Registry (ECR)",
+  "terminationProtection": false,
+  "aws": {
+    "clientIds": ["sts.amazonaws.com"]
+  },
+  "github": {
+    "issuer": "token.actions.githubusercontent.com",
+    "organization": "sunsreddit", 
+    "repos": ["gamethread","nba-stats", "registry", "sidebar"] 
+  }
+}
